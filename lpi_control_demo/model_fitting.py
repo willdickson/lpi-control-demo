@@ -52,6 +52,17 @@ def fit_controller(t, omega, setpt, disable, bounds, controller, tol=0.01,
     Returns:
     --------
 
+    param      : dict
+                 Dictionary containing the LPI controller parameters
+                 param = {
+                         'dcoef'    # drag coefficient 
+                         'pgain'    # proportional gain 
+                         'igain'    # integrator gain
+                         'ileak'    # integrator leakiness coefficient
+                         'setpt'    # set point function 
+                         'disable'  # controller disable function 
+                         }
+
     """
     match controller:
         case 'lpi':
