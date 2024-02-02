@@ -202,10 +202,7 @@ def cost_func(x, t, omega, setpt_func, disable_func, disp_cost, controller):
     ctlr = LPIController(param)
     y = ctlr.solve(t, method='RK23')
     omega_fit = y[0]
-    if omega_fit.shape != omega.shape:
-        cost = 2*omega.shape[0] - omega_fit.shape[0]
-    else:
-        cost = np.sum((omega_fit - omega)**2)/omega.shape[0]
+    cost = np.sum((omega_fit - omega)**2)/omega.shape[0]
     if disp_cost:
         print(f'  cost: {cost}')
     return cost
