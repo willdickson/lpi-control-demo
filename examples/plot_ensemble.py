@@ -57,9 +57,19 @@ print()
 
 
 print('plotting results')
+
+duration_list = []
+omega_final_list = []
+
 for ds in datasets:
 
-    print(f'  {ds['data_file']}')
+    data_file = ds['data_file']
+    n0 = data_file.stem.find('_')+1
+    n1 = data_file.stem.find('s')
+    duration = int(data_file.stem[n0:n1])
+    duration_list.append(duration)
+
+    print(f'  {data_file}, duration = {duration}')
 
     t = ds['t']
     omega = ds['omega']
@@ -74,6 +84,8 @@ for ds in datasets:
     ctlr = LPIController(_param)
     y = ctlr.solve(t)
     omega_fit = y[0]
+
+    omega_final_list.append(omega_fit[-1])
     
     # Plot results
     fig, ax = plt.subplots(2,1,sharex=True)
@@ -81,7 +93,7 @@ for ds in datasets:
     omega_fit_line, = ax[0].plot(t, omega_fit, 'g')
     setpt_line, = ax[0].plot(t, setpt, 'r')
     ax[0].set_ylabel('angular velocity')
-    ax[0].set_title(f'{ds["data_file"]}')
+    ax[0].set_title(f'{data_file}')
     ax[0].legend(
             (omega_line, omega_fit_line, setpt_line), 
             (r'$\omega$ true', r'$\omega$ fit', r'setpt'), 
@@ -92,6 +104,16 @@ for ds in datasets:
     ax[1].set_ylabel('disable')
     ax[1].set_xlabel('t (sec)')
     ax[1].grid(True)
+
+duration_array = np.array(duration_list)
+omega_final_array = np.array(omega_final_list)
+
+fig, ax = plt.subplots(1,1)
+ax.plot(duration_array, omega_final_array, 'o') 
+ax.set_xlabel('stimulus duration (sec)')
+ax.set_ylabel('omega (deg/sec)')
+ax.set_title('omega 60 sec after disable')
+ax.grid(True)
 plt.show()
 
 

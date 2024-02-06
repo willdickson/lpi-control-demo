@@ -29,6 +29,9 @@ bounds = {
 
 # Type of controller to fit
 controller = 'lpi'
+print()
+print(f'fitting {controller} controller')
+print()
 
 # Flag for displaying cost at every evaluation of cost function
 disp_cost = False 
