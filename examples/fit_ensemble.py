@@ -3,6 +3,7 @@ import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 from lpi_control_demo import ensemble_fit_controller
+from lpi_control_demo import create_interp_func
 from lpi_control_demo import LPIController
 
 # File containing data to fit
@@ -49,10 +50,11 @@ for data_file in file_list:
     setpt[mask] = 0
 
     datasets.append({
-        't'       : t, 
-        'omega'   : omega, 
-        'setpt'   : setpt, 
-        'disable' : disable,
+        't'         : t, 
+        'omega'     : omega, 
+        'setpt'     : setpt, 
+        'disable'   : disable,
+        'data_file' : data_file
         })
 
 
@@ -83,18 +85,24 @@ param = ensemble_fit_controller(
 print(param)
 
 print('saving fit parameters')
-with open('ensemble_fit_results.pkl', 'wb') as f:
+with open(f'{controller}_ensemble_fit.pkl', 'wb') as f:
     pickle.dump(param, f)
 
 for ds in datasets:
+
+    print(f'  {ds['data_file']}')
 
     t = ds['t']
     omega = ds['omega']
     setpt = ds['setpt']
     disable = ds['disable']
 
+    _param = dict(param)
+    _param['setpt'] = create_interp_func(t, setpt)
+    _param['disable'] = create_interp_func(t, disable)
+
     # Evaluate controller, fit above, and get angular velocity for model fit
-    ctlr = LPIController(param)
+    ctlr = LPIController(_param)
     y = ctlr.solve(t)
     omega_fit = y[0]
     
@@ -104,7 +112,7 @@ for ds in datasets:
     omega_fit_line, = ax[0].plot(t, omega_fit, 'g')
     setpt_line, = ax[0].plot(t, setpt, 'r')
     ax[0].set_ylabel('angular velocity')
-    ax[0].set_title(f'Fit Results: {data_file}')
+    ax[0].set_title(f'{ds["data_file"]}')
     ax[0].legend(
             (omega_line, omega_fit_line, setpt_line), 
             (r'$\omega$ true', r'$\omega$ fit', r'setpt'), 

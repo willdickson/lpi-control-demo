@@ -7,12 +7,11 @@ from lpi_control_demo import create_interp_func
 from lpi_control_demo import LPIController
 
 
-param = {
-        'dcoef'   : 8.152e-02, 
-        'pgain'   : 1.494e+00, 
-        'igain'   : 2.634e-02,
-        'ileak'   : 7.688e-04,
-        }
+param_file = 'lpi_ensemble_fit.pkl'
+
+print('loading fit parameters')
+with open(param_file, 'rb') as f:
+    param = pickle.load(f)
      
 
 # File containing data to fit
@@ -32,7 +31,7 @@ datasets = []
 
 print('loading data files')
 for data_file in file_list:
-    print(f' {data_file}')
+    print(f'  {data_file}')
     # Load in data and unpack the values
     with open(data_file, 'rb') as f:
         data = pickle.load(f)
@@ -54,29 +53,13 @@ for data_file in file_list:
         'data_file' : data_file
         })
 
-
-#    # Plot the data we are going to fit
-#    fig, ax = plt.subplots(2,1,sharex=True)
-#    ax[0].plot(t, omega, 'b')
-#    ax[0].plot(t, setpt, 'r')
-#    ax[0].set_ylabel('angular velocity')
-#    ax[0].set_title('Data to be fit - close figure to run')
-#    ax[0].grid(True)
-#    ax[1].plot(t, disable, 'k')
-#    ax[1].set_ylabel('disable')
-#    ax[1].set_xlabel('t (sec)')
-#    ax[1].grid(True)
-#    ax[0].set_title(str(data_file))
-#
-#plt.show()
-
 print()
 
 
 print('plotting results')
 for ds in datasets:
 
-    print(f' {ds['data_file']}')
+    print(f'  {ds['data_file']}')
 
     t = ds['t']
     omega = ds['omega']
