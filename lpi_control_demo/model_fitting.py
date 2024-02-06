@@ -112,6 +112,7 @@ def ensemble_cost_func(x, datasets, disp_cost, controller):
         omega_fit = y[0]
         cost = np.sum((omega_fit - ds['omega'])**2)/ds['omega'].shape[0]
         total_cost += cost
+    total_cost = total_cost/len(datasets)
     if disp_cost:
         print(f'  cost: {totalcost}')
     return total_cost
