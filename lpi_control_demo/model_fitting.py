@@ -3,6 +3,120 @@ import scipy as sp
 from .lpi_controller import LPIController
 
 
+def ensemble_fit_controller(datasets, bounds, controller, tol=0.01, popsize=15, 
+        workers=-1, disp_cost=False):
+
+    """
+    Fit a controller model to an ensemble of datasets
+
+    """
+    match controller:
+        case 'lpi':
+            _bounds = [bounds['dcoef'], bounds['pgain'], bounds['igain'], bounds['ileak']]
+        case 'pi':
+            _bounds = [bounds['dcoef'], bounds['pgain'], bounds['igain']]
+        case 'p':
+            _bounds = [bounds['dcoef'], bounds['pgain']]
+        case _:
+            raise ValueError(f'unknown controller type {controller}')
+
+    _datasets = [dict(ds) for ds in datasets]
+
+    for ds in _datasets:
+        ds['setpt_func'] = sp.interpolate.interp1d(ds['t'], ds['setpt'], fill_value='extrapolate')
+        ds['disable_func'] = sp.interpolate.interp1d(ds['t'], ds['disable'], fill_value='extrapolate')
+
+    results = sp.optimize.differential_evolution(
+            ensemble_cost_func, 
+            _bounds, 
+            args=(_datasets, disp_cost, controller),
+            disp=True,
+            polish=False,
+            tol=tol,
+            updating='deferred',
+            popsize=popsize, 
+            workers=workers,
+            )
+    print(results)
+
+    match controller:
+        case 'lpi':
+            param = {
+                    'dcoef'   : results.x[0], 
+                    'pgain'   : results.x[1], 
+                    'igain'   : results.x[2],
+                    'ileak'   : results.x[3],
+                    'setpt'   : setpt_func,
+                    'disable' : disable_func, 
+                    }
+        case 'pi':
+            param = {
+                    'dcoef'   : results.x[0], 
+                    'pgain'   : results.x[1], 
+                    'igain'   : results.x[2],
+                    'ileak'   : 0.0,
+                    'setpt'   : setpt_func,
+                    'disable' : disable_func, 
+                    }
+        case 'p':
+            param = {
+                    'dcoef'   : results.x[0], 
+                    'pgain'   : results.x[1], 
+                    'igain'   : 0.0,
+                    'ileak'   : 0.0,
+                    'setpt'   : setpt_func,
+                    'disable' : disable_func, 
+                    }
+        case _:
+            raise ValueError(f'unknown controller type {controller}')
+
+    return param
+
+
+def ensemble_cost_func(x, datasets, disp_cost, controller):
+    """
+    Ensemble cost function for lpi, pi and p controllers. 
+
+    """
+    match controller:
+        case 'lpi':
+            param = {
+                    'dcoef'   : x[0], 
+                    'pgain'   : x[1], 
+                    'igain'   : x[2],
+                    'ileak'   : x[3],
+                    }
+        case 'pi':
+            param = {
+                    'dcoef'   : x[0], 
+                    'pgain'   : x[1], 
+                    'igain'   : x[2],
+                    'ileak'   : 0.0,
+                    }
+        case 'p':
+            param = {
+                    'dcoef'   : x[0], 
+                    'pgain'   : x[1], 
+                    'igain'   : 0.0,
+                    'ileak'   : 0.0,
+                    }
+        case _:
+            raise ValueError(f'unknown controller type {controller}')
+
+    total_cost = 0.0
+    for ds in datasets:
+        param['setpt'] = ds['setpt_func']
+        param['disable'] = ds['disable_func']
+        ctlr = LPIController(param)
+        y = ctlr.solve(ds['t'], method='RK23')
+        omega_fit = y[0]
+        cost = np.sum((omega_fit - ds['omega'])**2)/ds['omega'].shape[0]
+    if disp_cost:
+        print(f'  cost: {totalcost}')
+    return cost
+
+
+
 def fit_controller(t, omega, setpt, disable, bounds, controller, tol=0.01, 
         popsize=15, workers=-1, disp_cost=False):
     """
@@ -206,6 +320,7 @@ def cost_func(x, t, omega, setpt_func, disable_func, disp_cost, controller):
     if disp_cost:
         print(f'  cost: {cost}')
     return cost
+
 
 
 
