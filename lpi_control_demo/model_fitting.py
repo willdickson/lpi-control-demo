@@ -111,9 +111,10 @@ def ensemble_cost_func(x, datasets, disp_cost, controller):
         y = ctlr.solve(ds['t'], method='RK23')
         omega_fit = y[0]
         cost = np.sum((omega_fit - ds['omega'])**2)/ds['omega'].shape[0]
+        total_cost += cost
     if disp_cost:
         print(f'  cost: {totalcost}')
-    return cost
+    return total_cost
 
 
 
