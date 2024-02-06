@@ -23,8 +23,8 @@ def ensemble_fit_controller(datasets, bounds, controller, tol=0.01, popsize=15,
     _datasets = [dict(ds) for ds in datasets]
 
     for ds in _datasets:
-        ds['setpt_func'] = sp.interpolate.interp1d(ds['t'], ds['setpt'], fill_value='extrapolate')
-        ds['disable_func'] = sp.interpolate.interp1d(ds['t'], ds['disable'], fill_value='extrapolate')
+        ds['setpt_func'] = create_interp_func(ds['t'], ds['setpt'])
+        ds['disable_func'] = create_interp_func(ds['t'], ds['disable'])
 
     results = sp.optimize.differential_evolution(
             ensemble_cost_func, 
@@ -39,36 +39,12 @@ def ensemble_fit_controller(datasets, bounds, controller, tol=0.01, popsize=15,
             )
     print(results)
 
-    match controller:
-        case 'lpi':
-            param = {
-                    'dcoef'   : results.x[0], 
-                    'pgain'   : results.x[1], 
-                    'igain'   : results.x[2],
-                    'ileak'   : results.x[3],
-                    'setpt'   : setpt_func,
-                    'disable' : disable_func, 
-                    }
-        case 'pi':
-            param = {
-                    'dcoef'   : results.x[0], 
-                    'pgain'   : results.x[1], 
-                    'igain'   : results.x[2],
-                    'ileak'   : 0.0,
-                    'setpt'   : setpt_func,
-                    'disable' : disable_func, 
-                    }
-        case 'p':
-            param = {
-                    'dcoef'   : results.x[0], 
-                    'pgain'   : results.x[1], 
-                    'igain'   : 0.0,
-                    'ileak'   : 0.0,
-                    'setpt'   : setpt_func,
-                    'disable' : disable_func, 
-                    }
-        case _:
-            raise ValueError(f'unknown controller type {controller}')
+    param = {
+            'dcoef'   : results.x[0], 
+            'pgain'   : results.x[1], 
+            'igain'   : results.x[2],
+            'ileak'   : results.x[3],
+            }
 
     return param
 
@@ -191,8 +167,8 @@ def fit_controller(t, omega, setpt, disable, bounds, controller, tol=0.01,
             raise ValueError(f'unknown controller type {controller}')
 
     # Create interpolated functions for set point and disable 
-    setpt_func = sp.interpolate.interp1d(t, setpt, fill_value='extrapolate')
-    disable_func = sp.interpolate.interp1d(t, disable, fill_value='extrapolate')
+    setpt_func = create_interp_func(t, setpt)
+    disable_func = create_interp_func(t, disable)
 
     results = sp.optimize.differential_evolution(
             cost_func, 
@@ -325,4 +301,6 @@ def cost_func(x, t, omega, setpt_func, disable_func, disp_cost, controller):
 
 
 
-
+def create_interp_func(t, data): 
+    interp_func = sp.interpolate.interp1d(t, data, fill_value='extrapolate')
+    return interp_func
