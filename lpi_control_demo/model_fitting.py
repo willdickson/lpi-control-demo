@@ -39,12 +39,30 @@ def ensemble_fit_controller(datasets, bounds, controller, tol=0.01, popsize=15,
             )
     print(results)
 
-    param = {
-            'dcoef'   : results.x[0], 
-            'pgain'   : results.x[1], 
-            'igain'   : results.x[2],
-            'ileak'   : results.x[3],
-            }
+    match controller:
+        case 'lpi':
+            param = {
+                    'dcoef'   : results.x[0], 
+                    'pgain'   : results.x[1], 
+                    'igain'   : results.x[2],
+                    'ileak'   : results.x[3],
+                    }
+        case 'pi':
+            param = {
+                    'dcoef'   : results.x[0], 
+                    'pgain'   : results.x[1], 
+                    'igain'   : results.x[2],
+                    'ileak'   : 0.0,
+                    }
+        case 'p':
+            param = {
+                    'dcoef'   : results.x[0], 
+                    'pgain'   : results.x[1], 
+                    'igain'   : 0.0,
+                    'ileak'   : 0.0,
+                    }
+        case _:
+            raise ValueError(f'unknown controller type {controller}')
 
     return param
 
