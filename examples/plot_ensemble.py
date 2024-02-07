@@ -9,10 +9,25 @@ from lpi_control_demo import LPIController
 
 param_file = 'lpi_ensemble_fit.pkl'
 
+print()
 print('loading fit parameters')
 with open(param_file, 'rb') as f:
     param = pickle.load(f)
-     
+
+
+print()
+print('param')
+for k,v in param.items():
+    print(f'  {k} =  {v}')
+print()
+
+print()
+print(f'damping tc = {1.0/param["dcoef"]}')
+try:
+    print(f'leaky tc   = {1.0/param["ileak"]}')
+except KeyError:
+    pass
+print()
 
 # File containing data to fit
 file_list = [ 
@@ -108,11 +123,17 @@ for ds in datasets:
 duration_array = np.array(duration_list)
 omega_final_array = np.array(omega_final_list)
 
+tmp_data = np.vstack((duration_array, omega_final_array)).transpose()
+np.save('omega_final_vs_stim_duration.npy', tmp_data)
+
 fig, ax = plt.subplots(1,1)
+ax.plot([0, 180], [184, 184], ':k')
 ax.plot(duration_array, omega_final_array, 'o') 
 ax.set_xlabel('stimulus duration (sec)')
 ax.set_ylabel('omega (deg/sec)')
 ax.set_title('omega 60 sec after disable')
+ax.set_ylim(0,250)
+ax.set_xlim(0,180)
 ax.grid(True)
 plt.show()
 
