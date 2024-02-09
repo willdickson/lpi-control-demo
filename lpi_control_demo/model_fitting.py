@@ -8,6 +8,52 @@ def ensemble_fit_controller(datasets, bounds, controller, tol=0.01, popsize=15,
 
     """
     Fit a controller model to an ensemble of datasets
+    Fit a controller model to the provided data
+
+    Parameters:
+    ----------
+
+    datasets   : list 
+                 list of datasets to fit control model to  
+
+    bounds     : dict 
+                 Dictionary of bounds for variables, dcoef, pgain, igain, ileak.
+
+    controller : string
+                 A string indicating the controller type, lpi, pi or p
+                 for leaky-protortional-integral, proportional-integral,
+                 and proportional respectively. 
+
+    tol        : float, optional
+                 Relative tolerance for convergence. 
+                 See scipy.optimize.differential_evolution 
+
+    popsize    : int, optional
+                 A multiplier for setting the total population size. 
+                 See scipy.optimize.differential_evolution
+
+    workers    : int or map-like callable, optional
+                 If `workers` is an int the population is subdivided into `workers`
+                 sections and evaluated in parallel.
+                 See scipy.optimize.differential_evolution.
+
+    disp_cost  : bool, optional
+                 Whether or not to display the cost at every cost function evaluation.
+
+
+    Returns:
+    --------
+
+    param      : dict
+                 Dictionary containing the LPI controller parameters
+                 param = {
+                         'dcoef'    # drag coefficient 
+                         'pgain'    # proportional gain 
+                         'igain'    # integrator gain
+                         'ileak'    # integrator leakiness coefficient
+                         'setpt'    # set point function 
+                         'disable'  # controller disable function 
+                         }
 
     """
     match controller:
@@ -71,6 +117,32 @@ def ensemble_cost_func(x, datasets, disp_cost, controller):
     """
     Ensemble cost function for lpi, pi and p controllers. 
 
+    Cost function for lpi, pi and p controllers. 
+
+    Parameters:
+    ----------
+
+    x            :  ndarray
+                    1D array of floats, shape (4,), (3,), (2,) for  lpi, pi
+                    and p controllers respectively
+
+    datasets     : list 
+                   list of datasets to fit control model to  
+
+    disp_cost    : bool
+                   Whether or not to display the cost at every evaluation.
+
+    controller   : string
+                   A string indicating the controller type, lpi, pi or p
+                   for leaky-protortional-integral, proportional-integral,
+                   and proportional respectively. 
+
+    Returns:
+    --------
+    
+    dy           : ndarray
+                   1D array (floats) of shape (4,), (3,) or (2,) for the
+                   case of a lpi, pi or p controller
     """
     match controller:
         case 'lpi':
